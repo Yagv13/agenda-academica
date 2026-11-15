@@ -72,16 +72,19 @@ La imagen está optimizada y el HTML utiliza las versiones minificadas de CSS y 
 
 ## Optimización de imágenes
 
-La imagen original PNG se convirtió a WebP mediante Squoosh.
+La imagen original PNG se convirtió a WebP mediante Squoosh,
+con calidad configurada en 75.
 
-| Recurso | Peso aproximado |
-|---------|-----------------|
-| Imagen original PNG | 30.8 KB |
-| Imagen optimizada WebP | 25.9 KB |
+| Recurso                | Tamaño        |
+|------------------------|---------------|
+| Imagen original PNG    | 386 623 bytes |
+| Imagen optimizada WebP | 25 928 bytes  |
 
-La reducción aproximada fue de 4.9 KB, equivalente al 15.9 % respecto al peso original.
+La reducción fue de 360 695 bytes, equivalente aproximadamente
+al 93.3 % del tamaño original.
 
-Se revisó visualmente la calidad y se incorporó `img/estudio.webp` a la aplicación. La imagen original se conserva como evidencia y se excluye del paquete de despliegue.
+Se verificó visualmente la calidad de la imagen y se utilizó `img/estudio.webp` en la aplicación. El original se conserva
+en `docs/estudio-original.png` como evidencia y se excluye del paquete de despliegue.
 
 ## Minificación de CSS y JavaScript
 
