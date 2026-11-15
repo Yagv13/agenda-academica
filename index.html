@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Agenda para organizar tareas académicas.">
+    <title>Agenda académica</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/app.js" defer></script>
+</head>
+<body>
+    <main class="agenda">
+        <header>
+            <p class="etiqueta">MI ESPACIO DE ESTUDIO</p>
+            <h1>Agenda académica</h1>
+            <p>Organiza tus pendientes y registra tu avance.</p>
+        </header>
+
+        <section aria-labelledby="titulo-formulario">
+            <h2 id="titulo-formulario">Nueva tarea</h2>
+
+            <form id="formulario-tarea">
+                <label for="nombre-tarea">¿Qué necesitas realizar?</label>
+
+                <div class="campos">
+                    <input
+                        type="text"
+                        id="nombre-tarea"
+                        name="tarea"
+                        placeholder="Ejemplo: preparar el despliegue web"
+                        maxlength="120"
+                        required
+                    >
+                    <button type="submit">Agregar</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="pendientes" aria-labelledby="titulo-tareas">
+            <div class="encabezado-lista">
+                <h2 id="titulo-tareas">Mis tareas</h2>
+                <span id="contador"></span>
+            </div>
+
+            <p id="lista-vacia">Todavía no tienes tareas. Agrega la primera.</p>
+            <ul id="lista-tareas"></ul>
+        </section>
+
+        <p id="mensaje" class="mensaje" role="status"></p>
+
+        <footer>
+            Tus tareas se guardan en este navegador.
+        </footer>
+    </main>
+</body>
+</html>
