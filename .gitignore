@@ -1,0 +1,10 @@
+# Dependencias de herramientas de optimización
+node_modules/
+
+# Paquetes generados
+dist/
+*.zip
+*.tar.gz
+
+# Archivos del editor
+.vscode/
