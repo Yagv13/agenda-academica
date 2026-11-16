@@ -1,70 +1,54 @@
 "use strict";
 
-const CLAVE_ALMACENAMIENTO = "agenda-academica-tareas";
-
 const formulario = document.querySelector("#formulario-tarea");
 const entrada = document.querySelector("#nombre-tarea");
 const lista = document.querySelector("#lista-tareas");
 const listaVacia = document.querySelector("#lista-vacia");
 const contador = document.querySelector("#contador");
 const mensaje = document.querySelector("#mensaje");
+const botonAgregar = formulario.querySelector('button[type="submit"]');
 
-let tareas = cargarTareas();
+let tareas = [];
+let ocupado = false;
+let cargaCorrecta = false;
 
-function cargarTareas() {
-    try {
-        const contenido = localStorage.getItem(CLAVE_ALMACENAMIENTO);
-
-        if (contenido === null) {
-            return [];
+async function solicitar(ruta, opciones = {}) {
+    const respuesta = await fetch(ruta, {
+        ...opciones,
+        headers: {
+            "Content-Type": "application/json",
+            ...opciones.headers
         }
+    });
 
-        const datos = JSON.parse(contenido);
+    if (!respuesta.ok) {
+        const datos = await respuesta.json().catch(() => null);
 
-        if (!Array.isArray(datos)) {
-            throw new Error("Formato de almacenamiento incorrecto.");
-        }
-
-        return datos.filter((tarea) =>
-            tarea !== null &&
-            typeof tarea === "object" &&
-            typeof tarea.id === "string" &&
-            typeof tarea.nombre === "string" &&
-            typeof tarea.completada === "boolean"
+        throw new Error(
+            datos?.mensaje || "No fue posible completar la operación."
         );
-    } catch (error) {
-        mensaje.textContent =
-            "No fue posible recuperar las tareas guardadas. " +
-            "Comprueba que el navegador permita el almacenamiento local.";
-
-        return [];
     }
-}
 
-function guardarTareas() {
-    try {
-        localStorage.setItem(
-            CLAVE_ALMACENAMIENTO,
-            JSON.stringify(tareas)
-        );
-
-        mensaje.textContent = "";
-    } catch (error) {
-        mensaje.textContent =
-            "Los cambios están visibles, pero no pudieron guardarse. " +
-            "Se perderán al recargar la página.";
+    if (respuesta.status === 204) {
+        return null;
     }
+
+    return respuesta.json();
 }
 
 function mostrarTareas() {
     lista.replaceChildren();
 
-    const completadas = tareas.filter((tarea) => tarea.completada).length;
+    const completadas = tareas.filter(
+        (tarea) => tarea.completada
+    ).length;
 
-    contador.textContent =
-        `${completadas} de ${tareas.length} completadas`;
+    contador.textContent = cargaCorrecta
+        ? `${completadas} de ${tareas.length} completadas`
+        : "Sin datos disponibles";
 
-    listaVacia.hidden = tareas.length > 0;
+    listaVacia.hidden = !cargaCorrecta || tareas.length > 0;
+    botonAgregar.disabled = ocupado;
 
     tareas.forEach((tarea) => {
         const elemento = document.createElement("li");
@@ -79,11 +63,19 @@ function mostrarTareas() {
         const casilla = document.createElement("input");
         casilla.type = "checkbox";
         casilla.checked = tarea.completada;
+        casilla.disabled = ocupado;
 
         casilla.addEventListener("change", () => {
-            tarea.completada = casilla.checked;
-            guardarTareas();
-            mostrarTareas();
+            const nuevoEstado = casilla.checked;
+
+            ejecutarCambio(async () => {
+                await solicitar(`/api/tareas/${tarea.id}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({
+                        completada: nuevoEstado
+                    })
+                });
+            });
         });
 
         const texto = document.createElement("span");
@@ -93,21 +85,60 @@ function mostrarTareas() {
         botonEliminar.type = "button";
         botonEliminar.className = "boton-eliminar";
         botonEliminar.textContent = "Eliminar";
+        botonEliminar.disabled = ocupado;
         botonEliminar.setAttribute(
             "aria-label",
             `Eliminar tarea: ${tarea.nombre}`
         );
 
         botonEliminar.addEventListener("click", () => {
-            tareas = tareas.filter((item) => item.id !== tarea.id);
-            guardarTareas();
-            mostrarTareas();
+            ejecutarCambio(async () => {
+                await solicitar(`/api/tareas/${tarea.id}`, {
+                    method: "DELETE"
+                });
+            });
         });
 
         etiqueta.append(casilla, texto);
         elemento.append(etiqueta, botonEliminar);
         lista.append(elemento);
     });
+}
+
+async function ejecutarCambio(accion) {
+    if (ocupado) {
+        return;
+    }
+
+    ocupado = true;
+    mensaje.textContent = "";
+    mostrarTareas();
+
+    let cambioGuardado = false;
+
+    try {
+        await accion();
+        cambioGuardado = true;
+
+        tareas = await solicitar("/api/tareas");
+        cargaCorrecta = true;
+    } catch (error) {
+        if (cambioGuardado) {
+            cargaCorrecta = false;
+            tareas = [];
+
+            mensaje.textContent =
+                "El cambio se guardó, pero no se pudo actualizar la lista. " +
+                "Recarga la página para consultar las tareas.";
+        } else {
+            mensaje.textContent =
+                error.message +
+                " Si se interrumpió la conexión, recarga antes de reintentar.";
+        }
+    } finally {
+        ocupado = false;
+        mostrarTareas();
+    }
 }
 
 formulario.addEventListener("submit", (evento) => {
@@ -121,17 +152,32 @@ formulario.addEventListener("submit", (evento) => {
         return;
     }
 
-    tareas.push({
-        id: crypto.randomUUID(),
-        nombre,
-        completada: false
+    ejecutarCambio(async () => {
+        await solicitar("/api/tareas", {
+            method: "POST",
+            body: JSON.stringify({ nombre })
+        });
+
+        formulario.reset();
+        entrada.focus();
     });
-
-    guardarTareas();
-    mostrarTareas();
-
-    formulario.reset();
-    entrada.focus();
 });
 
-mostrarTareas();
+async function iniciar() {
+    ocupado = true;
+    mensaje.textContent = "Cargando tareas...";
+    mostrarTareas();
+
+    try {
+        tareas = await solicitar("/api/tareas");
+        cargaCorrecta = true;
+        mensaje.textContent = "";
+    } catch (error) {
+        mensaje.textContent = error.message;
+    } finally {
+        ocupado = false;
+        mostrarTareas();
+    }
+}
+
+iniciar();
