@@ -205,3 +205,57 @@ Se incorporarán posteriormente:
 - Aviso de Privacidad y Términos de uso.
 - Pruebas en dos navegadores.
 - Resultados de rendimiento.
+
+## Dominio local, HTTPS y encabezados de seguridad
+
+Se agregó al archivo de Windows
+`C:/Windows/System32/drivers/etc/hosts` la entrada:
+
+    127.0.0.1 agenda.test
+
+En Apache se habilitaron los módulos proxy, proxy_http, ssl y headers.
+
+Se utilizó mkcert 1.4.4 para instalar una autoridad certificadora
+local y generar un certificado para agenda.test:
+
+    mkcert -install
+    mkcert -cert-file C:/xampp/apache/conf/ssl-agenda/agenda.test.pem -key-file C:/xampp/apache/conf/ssl-agenda/agenda.test-key.pem agenda.test
+
+La carpeta ssl-agenda debe crearse antes de generar el certificado.
+Cada equipo debe generar sus propios certificados y claves.
+
+Se configuraron dos Virtual Hosts:
+
+- Puerto 80: redirección permanente a https://agenda.test/.
+- Puerto 443: TLS y proxy hacia Express en http://127.0.0.1:3000/.
+
+La copia documental está en docs/apache-agenda-https.conf.
+Para reproducirla, revisar rutas, habilitar los módulos y agregar
+los bloques a la configuración de Apache sin duplicarlos.
+El puerto 443 debe estar configurado mediante Listen.
+
+Se verificó la sintaxis con httpd.exe -t y el reconocimiento
+de los Virtual Hosts con httpd.exe -S. Después se reinició Apache.
+
+Se configuraron estos encabezados:
+
+- Content-Security-Policy.
+- Strict-Transport-Security, con max-age de 86400 segundos.
+- X-Content-Type-Options.
+- X-Frame-Options.
+- Referrer-Policy.
+
+Comprobaciones realizadas:
+
+    curl.exe -I http://agenda.test/
+    curl.exe --ssl-revoke-best-effort -I https://agenda.test/
+
+La primera devolvió 301 con destino HTTPS. La segunda devolvió
+200 y los cinco encabezados.
+
+En Windows, curl presentó CRYPT_E_NO_REVOCATION_CHECK.
+Para la comprobación local se utilizó --ssl-revoke-best-effort,
+que permite continuar cuando faltan los puntos de consulta
+de revocación, sin desactivar las demás validaciones TLS.
+
+Las claves privadas no forman parte del repositorio.
