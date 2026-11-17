@@ -345,3 +345,17 @@ que redirige /favicon.ico a /img/favicon.svg.
 
 Después de reiniciar Express se repitió Lighthouse.
 La ejecución final obtuvo 100/100 en buenas prácticas.
+
+### Métricas de la ejecución final
+
+| Métrica                    | Resultado |
+|----------------------------|-----------|
+| First Contentful Paint     | 0.3 s     |
+| Largest Contentful Paint   | 0.5 s     |
+| Total Blocking Time        | 0 ms      |
+| Cumulative Layout Shift    | 0.01      |
+| Speed Index                | 0.3 s     |
+
+Los resultados corresponden a una auditoría local en modo
+Navegación y dispositivo Escritorio. No representan una prueba
+de carga con usuarios concurrentes.
