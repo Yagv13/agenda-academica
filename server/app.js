@@ -17,6 +17,14 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(raizProyecto, "index.html"));
 });
 
+app.get("/privacidad", (req, res) => {
+    res.sendFile(path.join(raizProyecto, "legal", "privacidad.html"));
+});
+
+app.get("/terminos", (req, res) => {
+    res.sendFile(path.join(raizProyecto, "legal", "terminos.html"));
+});
+
 app.use(
     "/css",
     express.static(path.join(raizProyecto, "css"))
@@ -169,6 +177,11 @@ app.delete("/api/tareas/:id", validarId, async (req, res) => {
     }
 
     res.status(204).end();
+});
+
+// Icono solicitado automáticamente por el navegador
+app.get("/favicon.ico", (req, res) => {
+    res.redirect(302, "/img/favicon.svg");
 });
 
 // Manejar errores sin revelar credenciales ni consultas
