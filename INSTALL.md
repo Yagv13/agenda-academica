@@ -192,20 +192,6 @@ Después de modificar css/estilos.css:
 npx.cmd cleancss -o css/estilos.min.css css/estilos.css
 ```
 
-## 10. Configuraciones pendientes del reto
-
-Esta versión documenta la conexión entre Express y MySQL
-y las pruebas iniciales de la API y la interfaz.
-
-Se incorporarán posteriormente:
-
-- Dominio local y configuración de Apache como proxy.
-- Certificado TLS y redirección a HTTPS.
-- Encabezados HTTP de seguridad.
-- Aviso de Privacidad y Términos de uso.
-- Pruebas en dos navegadores.
-- Resultados de rendimiento.
-
 ## Dominio local, HTTPS y encabezados de seguridad
 
 Se agregó al archivo de Windows
@@ -259,3 +245,103 @@ que permite continuar cuando faltan los puntos de consulta
 de revocación, sin desactivar las demás validaciones TLS.
 
 Las claves privadas no forman parte del repositorio.
+
+## Documentación legal y ética
+
+Se incorporaron dos páginas informativas:
+
+- `legal/privacidad.html`: Aviso de Privacidad.
+- `legal/terminos.html`: Términos y condiciones.
+
+Express entrega estos documentos mediante las rutas:
+
+- https://agenda.test/privacidad
+- https://agenda.test/terminos
+
+Ambos están enlazados desde el pie de página de la agenda
+y permiten regresar a la aplicación.
+
+El Aviso de Privacidad describe los datos almacenados en MySQL,
+los registros técnicos de Apache, las finalidades, las medidas
+de protección y el procedimiento de eliminación.
+
+Los Términos y condiciones describen el uso académico permitido,
+las restricciones, la disponibilidad y las limitaciones del prototipo.
+
+Los documentos corresponden al entorno local de simulación.
+Se indica utilizar datos ficticios y se informa que la aplicación
+no cuenta con autenticación ni separación de tareas por usuario.
+
+Se comprobó la apertura de ambos documentos y el funcionamiento
+de los enlaces de navegación.
+
+## Pruebas funcionales y compatibilidad
+
+Se probó la aplicación en Google Chrome y Microsoft Edge,
+accediendo mediante https://agenda.test/.
+
+Las pruebas funcionales realizadas fueron:
+
+| Prueba | Resultado |
+|--------|-----------|
+| Registrar tareas | Correcto |
+| Marcar tareas como completadas | Correcto |
+| Desmarcar tareas | Correcto |
+| Conservar tareas y su estado al recargar | Correcto |
+| Eliminar tareas | Correcto |
+| Rechazar tareas compuestas solo por espacios | Correcto |
+| Consultar la misma información desde ambos navegadores | Correcto |
+
+Ambos navegadores acceden a la misma base de datos MySQL.
+Los cambios realizados desde uno se observan en el otro
+al recargar la página; no se implementó sincronización automática.
+
+También se verificó el acceso mediante HTTPS sin advertencias
+de certificado en los navegadores utilizados.
+
+### Validación de la API
+
+Se comprobaron las rutas de creación, consulta, actualización
+de estado y eliminación mediante solicitudes HTTP.
+
+Zod rechazó una tarea compuesta únicamente por espacios
+con una respuesta HTTP 400.
+
+Se consultó directamente la tabla tareas mediante el cliente
+de MySQL para comprobar que los registros y sus estados
+coincidieran con la interfaz.
+
+## Prueba de rendimiento con Lighthouse
+
+Se ejecutó Lighthouse desde las herramientas de desarrollo
+de Google Chrome sobre https://agenda.test/, en modo
+Navegación y con configuración de Escritorio.
+
+Los resultados de la ejecución final fueron:
+
+| Categoría | Puntuación |
+|-----------|------------|
+| Rendimiento | 100/100 |
+| Accesibilidad | 100/100 |
+| Buenas prácticas | 100/100 |
+| SEO | 100/100 |
+
+Se conservaron capturas de las puntuaciones y de las métricas
+de la auditoría como evidencia.
+
+Estos resultados corresponden a una ejecución en el entorno
+local. No constituyen una prueba de carga concurrente ni
+garantizan el mismo rendimiento en un servidor de producción.
+La puntuación de accesibilidad no sustituye una revisión manual.
+
+### Corrección identificada durante la auditoría
+
+La primera ejecución obtuvo 96/100 en buenas prácticas
+debido a una solicitud a /favicon.ico que devolvía HTTP 404.
+
+Se agregó img/favicon.svg, se incluyó su referencia en las
+tres páginas HTML y se configuró una ruta en Express
+que redirige /favicon.ico a /img/favicon.svg.
+
+Después de reiniciar Express se repitió Lighthouse.
+La ejecución final obtuvo 100/100 en buenas prácticas.
